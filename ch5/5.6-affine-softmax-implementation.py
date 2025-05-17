@@ -7,9 +7,6 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
-    import os
-    import sys
-    sys.path.append(os.pardir)  # 부모 디렉터리의 파일을 가져올 수 있도록 설정
     from common.functions import cross_entropy_error, softmax
     import numpy as np
     return cross_entropy_error, mo, np, softmax
@@ -70,7 +67,7 @@ def _(np):
         def forward(self, x):
             self.x = x
             out = np.dot(x, self.W) + self.b
-    
+
             return out
 
         def backward(self, dout):

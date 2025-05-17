@@ -7,8 +7,6 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
-    import sys, os
-    sys.path.append(os.pardir)  # 부모 디렉터리의 파일을 가져올 수 있도록 설정
     import numpy as np
     from common.layers import Affine, SoftmaxWithLoss, Relu
     from common.gradient import numerical_gradient
@@ -58,35 +56,35 @@ def _(Affine, OrderedDict, Relu, SoftmaxWithLoss, np):
             self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
 
             self.lastLayer = SoftmaxWithLoss() # 마지막 레이어는 따로 구분했음. 나중에 역전파할 때 reversed하는 부분이 있음. 거기에 포함 안시키려고 구분한 것 같음.
-        
+
         def predict(self, x):
             # ⭐️ 각 레이어를 순차적으로 순회하면서 순전파
             for layer in self.layers.values():
                 x = layer.forward(x)
-        
+
             return x
-        
+
         def loss(self, x, t): # x - 입력, t - 정답 레이블
             y = self.predict(x)
             return self.lastLayer.forward(y, t)
-    
+
         def accuracy(self, x, t):
             y = self.predict(x)
             y = np.argmax(y, axis=1)
             if t.ndim != 1 : t = np.argmax(t, axis=1)
-        
+
             accuracy = np.sum(y == t) / float(x.shape[0])
             return accuracy
-        
+
         def numerical_gradient(self, x, t): # x - 입력, t - 정답 레이블
             loss_W = lambda W: self.loss(x, t)
-        
+
             grads = {}
             grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
             grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
             grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
             grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
-        
+
             return grads
 
         # 역전파를 이용해 기울기 구하기
@@ -97,7 +95,7 @@ def _(Affine, OrderedDict, Relu, SoftmaxWithLoss, np):
             # 역전파
             dout = 1
             dout = self.lastLayer.backward(dout)
-        
+
             layers = list(self.layers.values())
             layers.reverse() # 역전파를 위해 뒤집는다.
             for layer in layers:
@@ -173,18 +171,18 @@ def _(TwoLayerNet, np, t_test, t_train, x_test, x_train):
         batch_mask = np.random.choice(train_size, batch_size)
         practice_x_batch = x_train[batch_mask]
         practice_t_batch = t_train[batch_mask]
-    
+
         # 기울기 계산
         # grad = practice_network.numerical_gradient(practice_x_batch, practice_t_batch) # 수치 미분 (ch4)
         grad = practice_network.gradient(practice_x_batch, practice_t_batch) # 오차역전파법으로 변경
-    
+
         # 갱신
         for layer_key in ('W1', 'b1', 'W2', 'b2'):
             practice_network.params[layer_key] -= learning_rate * grad[layer_key]
-    
+
         loss = practice_network.loss(practice_x_batch, practice_t_batch)
         train_loss_list.append(loss)
-    
+
         if i % iter_per_epoch == 0:
             train_acc = practice_network.accuracy(x_train, t_train)
             test_acc = practice_network.accuracy(x_test, t_test)
